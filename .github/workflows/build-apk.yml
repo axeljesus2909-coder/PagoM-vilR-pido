@@ -1,1 +1,44 @@
-.github/workflows/build-apk.yml
+name: Compilar APK
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Compilar APK
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Descargar codigo
+        uses: actions/checkout@v4
+
+      - name: Descomprimir el proyecto
+        run: |
+          unzip -o PagoMovilFast-GitHub.zip -d proyecto
+          ls -la proyecto
+
+      - name: Instalar Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Instalar Gradle 8.7
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.7'
+
+      - name: Compilar el APK
+        run: gradle -p proyecto assembleDebug --no-daemon --stacktrace
+
+      - name: Renombrar el APK
+        run: cp proyecto/app/build/outputs/apk/debug/app-debug.apk PagoMovilFast.apk
+
+      - name: Publicar el APK descargable
+        uses: actions/upload-artifact@v4
+        with:
+          name: PagoMovilFast-apk
+          path: PagoMovilFast.apk
+          if-no-files-found: error
